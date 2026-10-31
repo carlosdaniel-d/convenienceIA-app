@@ -1,0 +1,64 @@
+from fastapi import FastAPI, HTTPException, Request
+from pydantic import BaseModel
+import os
+
+app = FastAPI(
+    title="convenienceIA API",
+    description="Super-app de descubrimiento, notificaciones de IA y atención automatizada.",
+    version="1.0.0"
+)
+
+# Estructura de datos para recibir mensajes o consultas de la IA
+class MensajeCliente(BaseModel.dict if hasattr(BaseModel, 'dict') else object):
+    pass
+
+class WebhookMessage(BaseModel):
+    phone_number: str
+    message: str
+    business_id: str
+
+@app.get("/")
+def read_root():
+    return {
+        "status": "online",
+        "app": "convenienceIA",
+        "mensaje": "El motor de la Super-App está funcionando correctamente a 🚀"
+    }
+
+# Endpoint para recibir las consultas de WhatsApp / Instagram / Web
+@app.post("/webhook/chat")
+async def handle_whatsapp_webhook(data: WebhookMessage):
+    try:
+        # Aquí es donde la IA procesa la intención del usuario (precios, horarios, reservas)
+        usuario_mensaje = data.message.lower()
+        
+        # Simulación de respuesta inteligente de convenienceIA
+        if "precio" in usuario_mensaje or "cuanto cuesta" in usuario_mensaje:
+            respuesta = "¡Hola! Con gusto te compartimos nuestros precios y catálogo actualizado en la app. ¿Te gustaría ver las ofertas relámpago de hoy?"
+        elif "ubicacion" in usuario_mensaje or "donde estan" in usuario_mensaje:
+            respuesta = "Estamos muy cerca de ti. Revisa el mapa en convenienceIA para ver la ruta exacta y el tiempo de llegada."
+        else:
+            respuesta = "¡Hola! Soy el asistente virtual de convenienceIA. ¿En qué te ayudamos hoy a encontrar lo que buscas?"
+
+        return {
+            "status": "success",
+            "business_id": data.business_id,
+            "reply": respuesta
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+# Endpoint para registrar preferencias del usuario (Onboarding personalizado)
+class UserPreference(BaseModel):
+    user_id: str
+    favorite_food: str
+    preferred_drink: str
+    age: int
+
+@app.post("/api/user/preferences")
+async def save_user_preferences(pref: UserPreference):
+    # Aquí se guardarán las preferencias para las notificaciones push inteligentes
+    return {
+        "status": "saved",
+        "message": f"Preferencias guardadas para el usuario {pref.user_id}. La IA personalizará sus alertas de salud y antojos."
+    }
